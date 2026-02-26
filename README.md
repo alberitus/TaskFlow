@@ -56,7 +56,7 @@ Fitur-fitur berikut sedang direncanakan untuk pengembangan ke depan:
 ### 👥 Kolaborasi
 | Fitur | Status |
 |-------|--------|
-| Notifikasi realtime saat ada perubahan | 🔜 Planned |
+| Notifikasi realtime | 🔜 Planned |
 | Lihat siapa saja yang sedang online di workspace | 🔜 Planned |
 | Activity log / history perubahan | 🔜 Planned |
 | Comment/diskusi per task | 🔜 Planned |
@@ -65,7 +65,7 @@ Fitur-fitur berikut sedang direncanakan untuk pengembangan ke depan:
 ### 🎨 UI/UX
 | Fitur | Status |
 |-------|--------|
-| Animasi transisi lebih smooth | 🔜 Planned |
+| Animasi transisi | 🔜 Planned |
 | Board scroll horizontal kalau kolom banyak | 🔜 Planned |
 | Keyboard shortcut (N untuk new task, dll) | 🔜 Planned |
 | Responsive mobile yang lebih baik | 🔜 Planned |

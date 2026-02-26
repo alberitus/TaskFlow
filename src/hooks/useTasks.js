@@ -60,27 +60,30 @@ export function useTasks(user, workspaceId = null) {
         const ref = getTaskRef();
         if (ref) await setDoc(doc(ref, newTask.id), newTask);
         else setTasks((prev) => [...prev, newTask]);
+        logActivity?.("menambah task", text);
     };
-
+    
     const updateTask = async (taskId, updates) => {
         const ref = getTaskRef();
-        if (ref) {
-            await setDoc(doc(ref, taskId), updates, { merge: true });
-        } else {
-            setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, ...updates } : t));
-        }
+        if (ref) await setDoc(doc(ref, taskId), updates, { merge: true });
+        else setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, ...updates } : t));
+        if (updates.text) logActivity?.("mengubah task", updates.text);
     };
-
+    
     const deleteTask = async (taskId) => {
+        const task = tasks.find((t) => t.id === taskId);
         const ref = getTaskRef();
         if (ref) await deleteDoc(doc(ref, taskId));
         else setTasks((prev) => prev.filter((t) => t.id !== taskId));
+        logActivity?.("menghapus task", task?.text || "");
     };
-
+    
     const moveTask = async (taskId, newColumnId) => {
+        const task = tasks.find((t) => t.id === taskId);
         const ref = getTaskRef();
         if (ref) await setDoc(doc(ref, taskId), { columnId: newColumnId }, { merge: true });
         else setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, columnId: newColumnId } : t));
+        logActivity?.("memindahkan task", task?.text || "");
     };
 
     const reorderTasks = (activeId, overId) => {

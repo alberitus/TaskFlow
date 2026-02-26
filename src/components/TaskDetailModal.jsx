@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useComments } from "../hooks/useComments";
 
 const PRIORITIES = [
     { value: "high", label: "High", color: "#ef4444", bg: "#fef2f2" },
@@ -15,6 +16,8 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
     const [assignees, setAssignees] = useState(task.assignees || []);
     const [newSubtask, setNewSubtask] = useState("");
     const [priorityOpen, setPriorityOpen] = useState(false);
+    const { comments, addComment, deleteComment } = useComments(workspaceId, task.id);
+    const [commentText, setCommentText] = useState("");
 
     const selectedPriority = PRIORITIES.find((p) => p.value === priority);
 
@@ -64,6 +67,22 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
     const isOverdue = () => {
         if (!dueDate) return false;
         return new Date(dueDate) < new Date();
+    };
+
+    const handleAddComment = (e) => {
+        e.preventDefault();
+        if (!commentText.trim()) return;
+        addComment(user, commentText);
+        setCommentText("");
+    };
+    
+    const renderComment = (text) => {
+        const parts = text.split(/(@\w+)/g);
+        return parts.map((part, i) =>
+            part.startsWith("@")
+            ? <span key={i} className="mention">{part}</span>
+            : part
+        );
     };
 
     return (
@@ -152,6 +171,56 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
                                 </button>
                             </form>
                         </div>
+
+                        {/* Comments */}
+                        {workspaceId && (
+                            <div className="task-section">
+                                <label className="task-section-label">
+                                    <i className="bi bi-chat-dots"></i> Comments
+                                    {comments.length > 0 && <span className="subtask-count">{comments.length}</span>}
+                                </label>
+
+                                <div className="comment-list">
+                                    {comments.map((c) => (
+                                        <div key={c.id} className={`comment-item ${darkMode ? "dark" : ""}`}>
+                                            <div className="comment-avatar">
+                                                {c.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                                            </div>
+                                            <div className="comment-body">
+                                                <div className="comment-meta">
+                                                    <span className="comment-name">{c.name}</span>
+                                                    <span className="comment-time">
+                                                        {new Date(c.createdAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                                                    </span>
+                                                    {user && c.uid === user.uid && (
+                                                        <button className="comment-delete" onClick={() => deleteComment(c.id)}>
+                                                            <i className="bi bi-trash"></i>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <p className="comment-text">{renderComment(c.text)}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {user ? (
+                                <form className="comment-form" onSubmit={handleAddComment}>
+                                    <input
+                                    className={`add-input ${darkMode ? "dark" : ""}`}
+                                    placeholder="Tulis komentar... (gunakan @nama untuk mention)"
+                                    value={commentText}
+                                    onChange={(e) => setCommentText(e.target.value)}
+                                    />
+                                    <button type="submit" className="btn-confirm" style={{ padding: "7px 14px", flex: "none" }}>
+                                        <i className="bi bi-send"></i>
+                                    </button>
+                                </form>
+                                ) : (
+                                    <p style={{ fontSize: "0.8rem", color: "#94a3b8" }}>Login untuk berkomentar.</p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column */}

@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import Board from "./components/Board";
 import WorkspacePanel from "./components/WorkspacePanel";
+import NotificationToast from "./components/NotificationToast";
 import { useTasks } from "./hooks/useTasks";
 import { useAuth } from "./hooks/useAuth";
 import { useWorkspace } from "./hooks/useWorkspace";
+import { usePresence } from "./hooks/usePresence";
+import { useActivity } from "./hooks/useActivity";
+import { useNotifications } from "./hooks/useNotifications";
 import "./App.css";
 
 export default function App() {
@@ -13,14 +17,17 @@ export default function App() {
   const [workspaceMembers, setWorkspaceMembers] = useState({});
 
   const { user, loading, login, logout } = useAuth();
-  const { workspace, loading: wsLoading, error: wsError, createWorkspace, joinWorkspace, leaveWorkspace } = useWorkspace(user);
+  const { workspace, myWorkspaces, loading: wsLoading, error: wsError, createWorkspace, joinWorkspace, leaveWorkspace, switchWorkspace } = useWorkspace(user);
+  const { onlineMembers } = usePresence(user, workspace?.id);
+  const { activities, logActivity } = useActivity(user, workspace?.id);
+  const { notifications, dismiss } = useNotifications(activities, user?.uid);
+
   const {
     tasks, columns, ready,
     addTask, updateTask, deleteTask, moveTask,
     reorderTasks, addColumn, deleteColumn, reorderColumns,
-  } = useTasks(user, workspace?.id);
+  } = useTasks(user, workspace?.id, logActivity);
 
-  // Fetch members workspace untuk fitur assign
   useEffect(() => {
     if (!workspace?.id) { setWorkspaceMembers({}); return; }
     import("firebase/firestore").then(({ doc, getDoc }) => {
@@ -54,7 +61,6 @@ export default function App() {
           <h1 className="app-title">TaskFlow</h1>
           <span className="app-subtitle">Stay organized, stay focused.</span>
         </div>
-
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {user ? (
             <div className="user-info">
@@ -98,12 +104,16 @@ export default function App() {
         <WorkspacePanel
           user={user}
           workspace={workspace}
+          myWorkspaces={myWorkspaces}
           onCreate={createWorkspace}
           onJoin={joinWorkspace}
           onLeave={leaveWorkspace}
+          onSwitch={switchWorkspace}
           loading={wsLoading}
           error={wsError}
           darkMode={darkMode}
+          activities={activities}
+          onlineMembers={onlineMembers}
         />
       )}
 
@@ -122,8 +132,13 @@ export default function App() {
           onReorderColumns={reorderColumns}
           members={workspace ? workspaceMembers : {}}
           darkMode={darkMode}
+          workspaceId={workspace?.id}
+          user={user}
         />
       </main>
+
+      {/* NOTIFICATION TOAST */}
+      <NotificationToast notifications={notifications} onDismiss={dismiss} />
 
       {/* LOGOUT MODAL */}
       {showLogoutModal && (

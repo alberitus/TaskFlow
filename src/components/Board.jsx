@@ -17,6 +17,7 @@ const PRESET_COLORS = [
 export default function Board({
     tasks, columns, onAdd, onDelete, onUpdate, onMove, onReorder,
     onAddColumn, onDeleteColumn, onReorderColumns, darkMode, members,
+    workspaceId, user,
 }) {
         const [activeTask, setActiveTask] = useState(null);
         const [activeColumn, setActiveColumn] = useState(null);
@@ -150,7 +151,7 @@ export default function Board({
     
             {/* Task Detail Modal */}
             {currentSelectedTask && (
-            <TaskDetailModal
+                <TaskDetailModal
                 task={currentSelectedTask}
                 columns={columns}
                 members={members}
@@ -158,7 +159,9 @@ export default function Board({
                 onDelete={onDelete}
                 onClose={() => setSelectedTask(null)}
                 darkMode={darkMode}
-            />
+                workspaceId={workspaceId}
+                user={user}
+                />
             )}
         </>
         );

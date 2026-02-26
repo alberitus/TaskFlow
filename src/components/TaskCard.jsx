@@ -1,252 +1,84 @@
-import { useState, useEffect } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-const PRIORITIES = [
-    { value: "high", label: "High", color: "#ef4444", bg: "#fef2f2" },
-    { value: "medium", label: "Medium", color: "#f59e0b", bg: "#fffbeb" },
-    { value: "low", label: "Low", color: "#22c55e", bg: "#f0fdf4" },
-];
+const priorityConfig = {
+    high: { label: "High", color: "#ef4444" },
+    medium: { label: "Medium", color: "#f59e0b" },
+    low: { label: "Low", color: "#22c55e" },
+};
 
-export default function TaskDetailModal({ task, columns, members, onUpdate, onDelete, onClose, darkMode }) {
-    const [text, setText] = useState(task.text);
-    const [description, setDescription] = useState(task.description || "");
-    const [priority, setPriority] = useState(task.priority);
-    const [dueDate, setDueDate] = useState(task.dueDate || "");
-    const [subtasks, setSubtasks] = useState(task.subtasks || []);
-    const [assignees, setAssignees] = useState(task.assignees || []);
-    const [newSubtask, setNewSubtask] = useState("");
-    const [priorityOpen, setPriorityOpen] = useState(false);
+export default function TaskCard({ task, onDelete, onOpen, darkMode }) {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+        useSortable({ id: task.id });
 
-    const selectedPriority = PRIORITIES.find((p) => p.value === priority);
-
-    const handleSave = () => {
-        onUpdate(task.id, { text, description, priority, dueDate, subtasks, assignees });
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
     };
 
-    const addSubtask = (e) => {
-        e.preventDefault();
-        if (!newSubtask.trim()) return;
-        const updated = [...subtasks, { id: `st-${Date.now()}`, text: newSubtask.trim(), done: false }];
-        setSubtasks(updated);
-        setNewSubtask("");
-        onUpdate(task.id, { subtasks: updated });
-    };
+    const p = priorityConfig[task.priority];
+    const doneCount = (task.subtasks || []).filter((s) => s.done).length;
+    const totalSubtasks = (task.subtasks || []).length;
+    const progress = totalSubtasks > 0 ? Math.round((doneCount / totalSubtasks) * 100) : 0;
 
-    const toggleSubtask = (id) => {
-        const updated = subtasks.map((s) => s.id === id ? { ...s, done: !s.done } : s);
-        setSubtasks(updated);
-        onUpdate(task.id, { subtasks: updated });
-    };
+    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+    const isDueSoon = task.dueDate && !isOverdue && (new Date(task.dueDate) - new Date()) < 86400000 * 2;
 
-    const deleteSubtask = (id) => {
-        const updated = subtasks.filter((s) => s.id !== id);
-        setSubtasks(updated);
-        onUpdate(task.id, { subtasks: updated });
-    };
-
-    const toggleAssignee = (uid, name) => {
-        const exists = assignees.find((a) => a.uid === uid);
-        const updated = exists
-        ? assignees.filter((a) => a.uid !== uid)
-        : [...assignees, { uid, name }];
-        setAssignees(updated);
-        onUpdate(task.id, { assignees: updated });
-    };
-
-    const doneCount = subtasks.filter((s) => s.done).length;
-    const progress = subtasks.length > 0 ? Math.round((doneCount / subtasks.length) * 100) : 0;
-
-    const isDueSoon = () => {
-        if (!dueDate) return false;
-        const diff = new Date(dueDate) - new Date();
-        return diff > 0 && diff < 86400000 * 2;
-    };
-
-    const isOverdue = () => {
-        if (!dueDate) return false;
-        return new Date(dueDate) < new Date();
-    };
+    const formatDate = (d) => new Date(d).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div
-                className={`task-modal ${darkMode ? "dark" : ""}`}
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="task-modal-header">
-                    <input
-                        className={`task-modal-title-input ${darkMode ? "dark" : ""}`}
-                        value={text}
-                        onChange={(e) => setText(e.target.value)}
-                        onBlur={handleSave}
-                        placeholder="Task title..."
-                    />
-                    <button className="modal-close-btn" onClick={onClose}>
-                        <i className="bi bi-x-lg"></i>
-                    </button>
+        <div
+        ref={setNodeRef}
+        style={style}
+        className={`task-card ${darkMode ? "dark" : ""} ${isDragging ? "dragging" : ""}`}
+        {...attributes}
+        {...listeners}
+        onClick={() => onOpen(task)}
+        >
+            <div className="task-top">
+                <span className="task-text">{task.text}</span>
+                <button
+                className="delete-btn"
+                onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                >×</button>
+            </div>
+
+            {/* Subtask progress bar */}
+            {totalSubtasks > 0 && (
+                <div className="card-subtask-wrap">
+                    <div className="card-subtask-bar">
+                        <div className="card-subtask-fill" style={{ width: `${progress}%` }} />
+                    </div>
+                    <span className="card-subtask-count">{doneCount}/{totalSubtasks}</span>
                 </div>
+            )}
 
-                <div className="task-modal-body">
-                    {/* Left Column */}
-                    <div className="task-modal-left">
+            <div className="task-bottom">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+                    <span className="priority-badge" style={{ color: p.color, borderColor: p.color }}>
+                        {p.label}
+                    </span>
 
-                        {/* Description */}
-                        <div className="task-section">
-                            <label className="task-section-label">
-                                <i className="bi bi-text-left"></i> Description
-                            </label>
-                            <textarea
-                                className={`task-textarea ${darkMode ? "dark" : ""}`}
-                                placeholder="Add a description..."
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                onBlur={handleSave}
-                                rows={4}
-                            />
-                        </div>
-
-                        {/* Subtasks */}
-                        <div className="task-section">
-                            <label className="task-section-label">
-                                <i className="bi bi-check2-square"></i> Subtasks
-                                {subtasks.length > 0 && (
-                                    <span className="subtask-count">{doneCount}/{subtasks.length}</span>
-                                )}
-                            </label>
-
-                            {subtasks.length > 0 && (
-                                <div className="subtask-progress">
-                                    <div className="subtask-progress-bar" style={{ width: `${progress}%` }} />
-                                </div>
-                            )}
-
-                            <div className="subtask-list">
-                                {subtasks.map((s) => (
-                                    <div key={s.id} className={`subtask-item ${darkMode ? "dark" : ""}`}>
-                                        <input
-                                        type="checkbox"
-                                        checked={s.done}
-                                        onChange={() => toggleSubtask(s.id)}
-                                        className="subtask-checkbox"
-                                        />
-                                        <span className={`subtask-text ${s.done ? "done" : ""}`}>{s.text}</span>
-                                        <button
-                                        className="subtask-delete"
-                                        onClick={() => deleteSubtask(s.id)}
-                                        >
-                                            <i className="bi bi-x"></i>
-                                        </button>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        {/* Assignees avatars */}
+                        {(task.assignees || []).length > 0 && (
+                            <div className="card-assignees">
+                                {task.assignees.slice(0, 3).map((a) => (
+                                    <div key={a.uid} className="card-assignee-avatar" title={a.name}>
+                                        {a.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                                     </div>
                                 ))}
                             </div>
-
-                            <form className="subtask-form" onSubmit={addSubtask}>
-                                <input
-                                className={`add-input ${darkMode ? "dark" : ""}`}
-                                placeholder="Add subtask..."
-                                value={newSubtask}
-                                onChange={(e) => setNewSubtask(e.target.value)}
-                                />
-                                <button type="submit" className="btn-confirm" style={{ padding: "7px 14px", flex: "none" }}>
-                                    <i className="bi bi-plus"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    {/* Right Column */}
-                    <div className="task-modal-right">
-
-                        {/* Priority */}
-                        <div className="task-section">
-                            <label className="task-section-label">
-                                <i className="bi bi-flag"></i> Priority
-                            </label>
-                            <div className="custom-select-wrap" style={{ position: "relative" }}>
-                                <button
-                                type="button"
-                                className={`custom-select-trigger ${darkMode ? "dark" : ""} ${priorityOpen ? "open" : ""}`}
-                                onClick={() => setPriorityOpen(!priorityOpen)}
-                                >
-                                    <span className="custom-select-dot" style={{ background: selectedPriority.color }} />
-                                    <span className="custom-select-label">{selectedPriority.label}</span>
-                                    <i className={`bi bi-chevron-down custom-select-arrow ${priorityOpen ? "rotated" : ""}`} />
-                                </button>
-                                {priorityOpen && (
-                                    <div className={`custom-select-dropdown ${darkMode ? "dark" : ""}`}>
-                                        {PRIORITIES.map((p) => (
-                                            <div
-                                                key={p.value}
-                                                className={`custom-select-option ${priority === p.value ? "active" : ""} ${darkMode ? "dark" : ""}`}
-                                                style={{ "--opt-color": p.color, "--opt-bg": p.bg }}
-                                                onClick={() => {
-                                                setPriority(p.value);
-                                                setPriorityOpen(false);
-                                                onUpdate(task.id, { priority: p.value });
-                                                }}
-                                            >
-                                                <span className="custom-select-dot" style={{ background: p.color }} />
-                                                <span>{p.label}</span>
-                                                {priority === p.value && <i className="bi bi-check2 ms-auto" style={{ color: p.color }} />}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Due Date */}
-                        <div className="task-section">
-                            <label className="task-section-label">
-                                <i className="bi bi-calendar"></i> Due Date
-                            </label>
-                            <input
-                                type="date"
-                                className={`add-input ${darkMode ? "dark" : ""} ${isOverdue() ? "overdue" : isDueSoon() ? "due-soon" : ""}`}
-                                value={dueDate}
-                                onChange={(e) => { setDueDate(e.target.value); onUpdate(task.id, { dueDate: e.target.value }); }}
-                            />
-                            {isOverdue() && <span className="due-warning overdue-text"><i className="bi bi-exclamation-circle"></i> Overdue!</span>}
-                            {isDueSoon() && !isOverdue() && <span className="due-warning soon-text"><i className="bi bi-clock"></i> Due soon!</span>}
-                        </div>
-
-                        {/* Assignees */}
-                        {members && Object.keys(members).length > 0 && (
-                            <div className="task-section">
-                                <label className="task-section-label">
-                                    <i className="bi bi-person"></i> Assignees
-                                </label>
-                                <div className="assignee-list">
-                                    {Object.entries(members).map(([uid, name]) => {
-                                        const isAssigned = assignees.find((a) => a.uid === uid);
-                                        const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
-                                        return (
-                                        <div
-                                            key={uid}
-                                            className={`assignee-item ${isAssigned ? "assigned" : ""} ${darkMode ? "dark" : ""}`}
-                                            onClick={() => toggleAssignee(uid, name)}
-                                        >
-                                            <div className="assignee-avatar" style={{ background: isAssigned ? "#6366f1" : "#cbd5e1" }}>
-                                                {initials}
-                                            </div>
-                                            <span className="assignee-name">{name}</span>
-                                            {isAssigned && <i className="bi bi-check2" style={{ color: "#6366f1", marginLeft: "auto" }}></i>}
-                                        </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
                         )}
 
-                        {/* Delete */}
-                        <div className="task-section" style={{ marginTop: "auto" }}>
-                            <button
-                                className="btn-delete-task"
-                                onClick={() => { onDelete(task.id); onClose(); }}
-                            >
-                                <i className="bi bi-trash"></i> Hapus Task
-                            </button>
-                        </div>
+                        {/* Due date */}
+                        {task.dueDate && (
+                            <span className={`card-due ${isOverdue ? "overdue" : isDueSoon ? "due-soon" : ""}`}>
+                                <i className="bi bi-calendar2"></i> {formatDate(task.dueDate)}
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>

@@ -30,6 +30,12 @@ Aplikasi **Kanban Board** modern dengan fitur drag & drop, dark mode, autentikas
 - **Buat Workspace** — dapat kode unik 6 digit
 - **Gabung Workspace** — masukkan kode dari rekan tim
 - **Assign task ke member** workspace
+- **Notifikasi realtime** — toast notification saat ada perubahan dari member lain
+- **Lihat siapa online** — tampilkan avatar member yang sedang aktif di workspace
+- **Activity log** — history semua perubahan di workspace
+- **Comment/diskusi per task** — diskusi langsung di task detail modal
+- **Mention anggota** — gunakan @nama di kolom komentar
+- **Daftar workspace** — lihat, switch, dan kelola semua workspace yang diikuti
 
 ### 🎨 UI/UX
 - **Dark Mode** — toggle light/dark kapan saja
@@ -53,19 +59,10 @@ Fitur-fitur berikut sedang direncanakan untuk pengembangan ke depan:
 | Search task | 🔜 Planned |
 | Sort task (by priority, by date) | 🔜 Planned |
 
-### 👥 Kolaborasi
-| Fitur | Status |
-|-------|--------|
-| Notifikasi realtime | 🔜 Planned |
-| Lihat siapa saja yang sedang online di workspace | 🔜 Planned |
-| Activity log / history perubahan | 🔜 Planned |
-| Comment/diskusi per task | 🔜 Planned |
-| Mention anggota dengan @nama | 🔜 Planned |
-
 ### 🎨 UI/UX
 | Fitur | Status |
 |-------|--------|
-| Animasi transisi | 🔜 Planned |
+| Animasi transisi lebih smooth | 🔜 Planned |
 | Board scroll horizontal kalau kolom banyak | 🔜 Planned |
 | Keyboard shortcut (N untuk new task, dll) | 🔜 Planned |
 | Responsive mobile yang lebih baik | 🔜 Planned |
@@ -128,11 +125,18 @@ src/
 │   ├── TaskDetailModal.jsx   # Modal detail task (edit, subtask, assignee, dll)
 │   ├── AddTaskForm.jsx       # Form tambah task dengan custom dropdown
 │   ├── SortableColumn.jsx    # Wrapper drag kolom
-│   └── WorkspacePanel.jsx    # Panel kolaborasi workspace
+│   ├── WorkspacePanel.jsx    # Panel kolaborasi workspace
+│   ├── OnlinePresence.jsx    # Tampilkan member yang sedang online
+│   ├── ActivityLog.jsx       # Panel history perubahan
+│   └── NotificationToast.jsx # Toast notifikasi realtime
 ├── hooks/
 │   ├── useAuth.js            # Logic autentikasi Google
 │   ├── useTasks.js           # Logic task & kolom + Firestore sync
-│   └── useWorkspace.js       # Logic buat & gabung workspace
+│   ├── useWorkspace.js       # Logic buat, gabung & daftar workspace
+│   ├── usePresence.js        # Logic online presence
+│   ├── useActivity.js        # Logic activity log
+│   ├── useComments.js        # Logic comment per task
+│   └── useNotifications.js   # Logic notifikasi realtime
 ├── data/
 │   └── initialData.js        # Data awal kolom & task
 ├── firebase.js               # Konfigurasi Firebase
@@ -173,8 +177,22 @@ service cloud.firestore {
         allow read, write: if request.auth != null &&
           get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members[request.auth.uid] == true;
       }
-
       match /tasks/{taskId} {
+        allow read, write: if request.auth != null &&
+          get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members[request.auth.uid] == true;
+      }
+      match /presence/{userId} {
+        allow read: if request.auth != null &&
+          get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members[request.auth.uid] == true;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /activity/{activityId} {
+        allow read: if request.auth != null &&
+          get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members[request.auth.uid] == true;
+        allow create: if request.auth != null &&
+          get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members[request.auth.uid] == true;
+      }
+      match /tasks/{taskId}/comments/{commentId} {
         allow read, write: if request.auth != null &&
           get(/databases/$(database)/documents/workspaces/$(workspaceId)).data.members[request.auth.uid] == true;
       }
@@ -193,6 +211,8 @@ service cloud.firestore {
 4. Rekan tim login → klik **Gabung dengan Kode** → masukkan kode
 5. Semua perubahan **sync realtime** ke seluruh member ✅
 6. Di dalam workspace, bisa **assign task** ke member manapun
+7. Klik **Activity** untuk lihat history perubahan
+8. Avatar member yang online tampil di workspace bar
 
 ---
 
@@ -205,7 +225,8 @@ service cloud.firestore {
 5. Set due date — otomatis muncul warning kalau overdue atau hampir deadline
 6. Assign ke member workspace (kolom kanan)
 7. Ubah priority dengan dropdown custom
-8. Hapus task via tombol merah di bawah
+8. Tulis komentar — gunakan @nama untuk mention member
+9. Hapus task via tombol merah di bawah
 
 ---
 

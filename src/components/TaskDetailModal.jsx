@@ -7,7 +7,7 @@ const PRIORITIES = [
     { value: "low", label: "Low", color: "#22c55e", bg: "#f0fdf4" },
 ];
 
-export default function TaskDetailModal({ task, columns, members, onUpdate, onDelete, onClose, darkMode }) {
+export default function TaskDetailModal({ task, columns, members, onUpdate, onDelete, onClose, darkMode, workspaceId, user }) {
     const [text, setText] = useState(task.text);
     const [description, setDescription] = useState(task.description || "");
     const [priority, setPriority] = useState(task.priority);

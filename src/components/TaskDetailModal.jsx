@@ -110,7 +110,7 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
                             <label className="task-section-label">
                                 <i className="bi bi-check2-square"></i> Subtasks
                                 {subtasks.length > 0 && (
-                                    <span className="subtask-count">{doneCount}/{subtasks.length}</span>
+                                <span className="subtask-count">{doneCount}/{subtasks.length}</span>
                                 )}
                             </label>
 
@@ -172,6 +172,7 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
                                     <span className="custom-select-label">{selectedPriority.label}</span>
                                     <i className={`bi bi-chevron-down custom-select-arrow ${priorityOpen ? "rotated" : ""}`} />
                                 </button>
+
                                 {priorityOpen && (
                                     <div className={`custom-select-dropdown ${darkMode ? "dark" : ""}`}>
                                         {PRIORITIES.map((p) => (
@@ -212,15 +213,15 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
 
                         {/* Assignees */}
                         {members && Object.keys(members).length > 0 && (
-                            <div className="task-section">
-                                <label className="task-section-label">
-                                    <i className="bi bi-person"></i> Assignees
-                                </label>
-                                <div className="assignee-list">
-                                    {Object.entries(members).map(([uid, name]) => {
-                                        const isAssigned = assignees.find((a) => a.uid === uid);
-                                        const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
-                                        return (
+                        <div className="task-section">
+                            <label className="task-section-label">
+                            <i className="bi bi-person"></i> Assignees
+                            </label>
+                            <div className="assignee-list">
+                                {Object.entries(members).map(([uid, name]) => {
+                                    const isAssigned = assignees.find((a) => a.uid === uid);
+                                    const initials = name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+                                    return (
                                         <div
                                             key={uid}
                                             className={`assignee-item ${isAssigned ? "assigned" : ""} ${darkMode ? "dark" : ""}`}
@@ -232,10 +233,10 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
                                             <span className="assignee-name">{name}</span>
                                             {isAssigned && <i className="bi bi-check2" style={{ color: "#6366f1", marginLeft: "auto" }}></i>}
                                         </div>
-                                        );
-                                    })}
-                                </div>
+                                    );
+                                })}
                             </div>
+                        </div>
                         )}
 
                         {/* Delete */}

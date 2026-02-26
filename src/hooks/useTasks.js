@@ -50,10 +50,25 @@ export function useTasks(user, workspaceId = null) {
     }, [user, workspaceId]);
 
     const addTask = async (columnId, text, priority = "medium") => {
-        const newTask = { id: `task-${Date.now()}`, columnId, text, priority };
+        const newTask = {
+            id: `task-${Date.now()}`,
+            columnId, text, priority,
+            description: "", dueDate: "",
+            subtasks: [], assignees: [],
+            createdAt: Date.now()
+        };
         const ref = getTaskRef();
         if (ref) await setDoc(doc(ref, newTask.id), newTask);
         else setTasks((prev) => [...prev, newTask]);
+    };
+
+    const updateTask = async (taskId, updates) => {
+        const ref = getTaskRef();
+        if (ref) {
+            await setDoc(doc(ref, taskId), updates, { merge: true });
+        } else {
+            setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, ...updates } : t));
+        }
     };
 
     const deleteTask = async (taskId) => {
@@ -104,33 +119,33 @@ export function useTasks(user, workspaceId = null) {
 
     const reorderColumns = async (activeId, overId) => {
         setColumns((prev) => {
-            const sorted = [...prev].sort((a, b) => a.order - b.order);
-            const oldIndex = sorted.findIndex((c) => c.id === activeId);
-            const newIndex = sorted.findIndex((c) => c.id === overId);
-            const reordered = [...sorted];
-            const [moved] = reordered.splice(oldIndex, 1);
-            reordered.splice(newIndex, 0, moved);
+        const sorted = [...prev].sort((a, b) => a.order - b.order);
+        const oldIndex = sorted.findIndex((c) => c.id === activeId);
+        const newIndex = sorted.findIndex((c) => c.id === overId);
+        const reordered = [...sorted];
+        const [moved] = reordered.splice(oldIndex, 1);
+        reordered.splice(newIndex, 0, moved);
 
-            const todoIdx = reordered.findIndex((c) => c.id === "todo");
-            const inprogressIdx = reordered.findIndex((c) => c.id === "inprogress");
-            const doneIdx = reordered.findIndex((c) => c.id === "done");
-            if (todoIdx > inprogressIdx || inprogressIdx > doneIdx) return prev;
+        const todoIdx = reordered.findIndex((c) => c.id === "todo");
+        const inprogressIdx = reordered.findIndex((c) => c.id === "inprogress");
+        const doneIdx = reordered.findIndex((c) => c.id === "done");
+        if (todoIdx > inprogressIdx || inprogressIdx > doneIdx) return prev;
 
-            const updated = reordered.map((c, i) => ({ ...c, order: i }));
-            const ref = getColRef();
-            if (ref) {
-                const batch = writeBatch(db);
-                updated.forEach((c) => batch.set(doc(ref, c.id), c));
-                batch.commit();
-            }
-            return updated;
+        const updated = reordered.map((c, i) => ({ ...c, order: i }));
+        const ref = getColRef();
+        if (ref) {
+            const batch = writeBatch(db);
+            updated.forEach((c) => batch.set(doc(ref, c.id), c));
+            batch.commit();
+        }
+        return updated;
         });
     };
 
     return {
         tasks, ready,
         columns: [...columns].sort((a, b) => a.order - b.order),
-        addTask, deleteTask, moveTask, reorderTasks,
-        addColumn, deleteColumn, reorderColumns,
+        addTask, updateTask, deleteTask, moveTask,
+        reorderTasks, addColumn, deleteColumn, reorderColumns,
     };
 }

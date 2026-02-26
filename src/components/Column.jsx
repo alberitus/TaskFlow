@@ -3,15 +3,10 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import TaskCard from "./TaskCard";
 import AddTaskForm from "./AddTaskForm";
 
-export default function Column({ column, tasks, onAdd, onDelete, onDeleteColumn, isDefault, darkMode }) {
+export default function Column({ column, tasks, onAdd, onDelete, onOpen, onDeleteColumn, isDefault, darkMode }) {
     const { setNodeRef, isOver } = useDroppable({ id: column.id });
-
     const color = column.color || "#6366f1";
-
-    const countStyle = {
-        background: `${color}22`,
-        color: color,
-    };
+    const countStyle = { background: `${color}22`, color };
 
     return (
         <div
@@ -28,9 +23,7 @@ export default function Column({ column, tasks, onAdd, onDelete, onDeleteColumn,
                         title="Delete board"
                         onPointerDown={(e) => e.stopPropagation()}
                         onClick={() => onDeleteColumn(column.id)}
-                        >
-                        ×
-                        </button>
+                        >×</button>
                     )}
                 </div>
             </div>
@@ -39,7 +32,7 @@ export default function Column({ column, tasks, onAdd, onDelete, onDeleteColumn,
                 <div ref={setNodeRef} className="task-list">
                     {tasks.length === 0 && <div className="empty-state">Drop tasks here</div>}
                     {tasks.map((task) => (
-                        <TaskCard key={task.id} task={task} onDelete={onDelete} darkMode={darkMode} />
+                        <TaskCard key={task.id} task={task} onDelete={onDelete} onOpen={onOpen} darkMode={darkMode} />
                     ))}
                 </div>
             </SortableContext>

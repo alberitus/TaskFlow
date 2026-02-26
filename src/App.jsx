@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Board from "./components/Board";
 import WorkspacePanel from "./components/WorkspacePanel";
 import { useTasks } from "./hooks/useTasks";
@@ -10,14 +10,27 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [workspaceMembers, setWorkspaceMembers] = useState({});
 
   const { user, loading, login, logout } = useAuth();
   const { workspace, loading: wsLoading, error: wsError, createWorkspace, joinWorkspace, leaveWorkspace } = useWorkspace(user);
   const {
     tasks, columns, ready,
-    addTask, deleteTask, moveTask,
+    addTask, updateTask, deleteTask, moveTask,
     reorderTasks, addColumn, deleteColumn, reorderColumns,
   } = useTasks(user, workspace?.id);
+
+  // Fetch members workspace untuk fitur assign
+  useEffect(() => {
+    if (!workspace?.id) { setWorkspaceMembers({}); return; }
+    import("firebase/firestore").then(({ doc, getDoc }) => {
+      import("./firebase").then(({ db }) => {
+        getDoc(doc(db, "workspaces", workspace.id)).then((snap) => {
+          if (snap.exists()) setWorkspaceMembers(snap.data().memberNames || {});
+        });
+      });
+    });
+  }, [workspace]);
 
   const handleLogout = () => {
     logout();
@@ -80,7 +93,7 @@ export default function App() {
         </div>
       )}
 
-      {/* WORKSPACE PANEL — hanya muncul kalau sudah login */}
+      {/* WORKSPACE PANEL */}
       {user && (
         <WorkspacePanel
           user={user}
@@ -100,12 +113,14 @@ export default function App() {
           tasks={tasks}
           columns={columns}
           onAdd={addTask}
+          onUpdate={updateTask}
           onDelete={deleteTask}
           onMove={moveTask}
           onReorder={reorderTasks}
           onAddColumn={addColumn}
           onDeleteColumn={deleteColumn}
           onReorderColumns={reorderColumns}
+          members={workspace ? workspaceMembers : {}}
           darkMode={darkMode}
         />
       </main>

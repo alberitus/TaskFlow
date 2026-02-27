@@ -124,9 +124,6 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
 ```
-
-> ⚠️ Jangan commit file `.env` ke repository. Pastikan `.env` sudah ada di `.gitignore`.
-
 Tersedia file `.env.example` sebagai template — copy dan isi dengan nilai dari Firebase Console kamu.
 
 ### 4. Jalankan dev server

@@ -105,26 +105,34 @@ Buka [http://localhost:5173](http://localhost:5173) di browser.
 ```
 src/
 ├── components/
+│   ├── ActivityLog.jsx       # Panel history perubahan
+│   ├── AddTaskForm.jsx       # Form tambah task dengan custom dropdown
+│   ├── ArchivePanel.jsx      # Panel arsip task
 │   ├── Board.jsx             # Container utama drag & drop
+│   ├── BoardToolbar.jsx      # Toolbar filter, search, dan aksi board
 │   ├── Column.jsx            # Kolom/board individual
+│   ├── DeadlineTracker.jsx   # Tracker deadline task
+│   ├── NotificationToast.jsx # Toast notifikasi realtime
+│   ├── OnlinePresence.jsx    # Tampilkan member yang sedang online
+│   ├── ShortcutHint.jsx      # Hint keyboard shortcut
+│   ├── SortableColumn.jsx    # Wrapper drag kolom
+│   ├── StatsPanel.jsx        # Panel statistik board
 │   ├── TaskCard.jsx          # Card task dengan preview info
 │   ├── TaskDetailModal.jsx   # Modal detail task (edit, subtask, assignee, dll)
-│   ├── AddTaskForm.jsx       # Form tambah task dengan custom dropdown
-│   ├── SortableColumn.jsx    # Wrapper drag kolom
-│   ├── WorkspacePanel.jsx    # Panel kolaborasi workspace
-│   ├── OnlinePresence.jsx    # Tampilkan member yang sedang online
-│   ├── ActivityLog.jsx       # Panel history perubahan
-│   └── NotificationToast.jsx # Toast notifikasi realtime
-├── hooks/
-│   ├── useAuth.js            # Logic autentikasi Google
-│   ├── useTasks.js           # Logic task & kolom + Firestore sync
-│   ├── useWorkspace.js       # Logic buat, gabung & daftar workspace
-│   ├── usePresence.js        # Logic online presence
-│   ├── useActivity.js        # Logic activity log
-│   ├── useComments.js        # Logic comment per task
-│   └── useNotifications.js   # Logic notifikasi realtime
+│   └── WorkspacePanel.jsx    # Panel kolaborasi workspace
 ├── data/
 │   └── initialData.js        # Data awal kolom & task
+├── hooks/
+│   ├── useActivity.js        # Logic activity log
+│   ├── useAuth.js            # Logic autentikasi Google
+│   ├── useComments.js        # Logic comment per task
+│   ├── useExport.js          # Logic export data
+│   ├── useKeyboardShortcuts.js # Logic keyboard shortcuts
+│   ├── useNotifications.js   # Logic notifikasi realtime
+│   ├── usePresence.js        # Logic online presence
+│   ├── useRecurring.js       # Logic task berulang
+│   ├── useTasks.js           # Logic task & kolom + Firestore sync
+│   └── useWorkspace.js       # Logic buat, gabung & daftar workspace
 ├── firebase.js               # Konfigurasi Firebase
 ├── App.jsx                   # Root component
 └── App.css                   # Global styles

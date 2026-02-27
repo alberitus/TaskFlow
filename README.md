@@ -64,6 +64,28 @@ Aplikasi **Kanban Board** modern dengan fitur drag & drop, dark mode, autentikas
 
 ---
 
+## 🖼️ Screenshots
+
+### 🔐 Login
+![Login](screenshots/login.png)
+
+### 👤 Mode Tamu
+![Guest Mode](screenshots/guest.png)
+
+### 🌙 Dark Mode
+![Dark Mode](screenshots/darkmode.png)
+
+### 🗂️ Board & Task
+![Task Modal](screenshots/modal.png)
+
+### 👥 Workspace
+![Workspace](screenshots/workspace.png)
+
+### 💬 Modal Workspace
+![Modal Workspace](screenshots/modal-workspace.png)
+
+---
+
 ## 🛠️ Tech Stack
 
 | Teknologi | Kegunaan |

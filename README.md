@@ -90,7 +90,25 @@ cd todo-list
 npm install
 ```
 
-### 3. Jalankan dev server
+## 3. Setup environment variables
+
+1. Buat file `.env` di root project (sejajar dengan `package.json`)
+2. Isi dengan konfigurasi Firebase kamu:
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+> ⚠️ Jangan commit file `.env` ke repository. Pastikan `.env` sudah ada di `.gitignore`.
+
+Tersedia file `.env.example` sebagai template — copy dan isi dengan nilai dari Firebase Console kamu.
+
+### 4. Jalankan dev server
 
 ```bash
 npm run dev

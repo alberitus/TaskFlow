@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef  } from "react";
 import { useComments } from "../hooks/useComments";
 
 const PRIORITIES = [
@@ -7,7 +7,14 @@ const PRIORITIES = [
     { value: "low", label: "Low", color: "#22c55e", bg: "#f0fdf4" },
 ];
 
-export default function TaskDetailModal({ task, columns, members, onUpdate, onDelete, onClose, darkMode, workspaceId, user }) {
+const RECURRINGS = [
+    { value: "none",    label: "Tidak berulang", icon: "bi-x-circle" },
+    { value: "daily",   label: "Setiap hari",    icon: "bi-sunrise" },
+    { value: "weekly",  label: "Setiap minggu",  icon: "bi-calendar-week" },
+    { value: "monthly", label: "Setiap bulan",   icon: "bi-calendar-month" },
+];
+
+export default function TaskDetailModal({ task, columns, members, onUpdate, onDelete, onClose, darkMode, workspaceId, user, onArchive  }) {
     const [text, setText] = useState(task.text);
     const [description, setDescription] = useState(task.description || "");
     const [priority, setPriority] = useState(task.priority);
@@ -15,11 +22,21 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
     const [subtasks, setSubtasks] = useState(task.subtasks || []);
     const [assignees, setAssignees] = useState(task.assignees || []);
     const [newSubtask, setNewSubtask] = useState("");
-    const [priorityOpen, setPriorityOpen] = useState(false);
+    const [openDropdown, setOpenDropdown] = useState(null);
     const { comments, addComment, deleteComment } = useComments(workspaceId, task.id);
     const [commentText, setCommentText] = useState("");
 
     const selectedPriority = PRIORITIES.find((p) => p.value === priority);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (!e.target.closest(".custom-select-wrap")) {
+                setOpenDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const handleSave = () => {
         onUpdate(task.id, { text, description, priority, dueDate, subtasks, assignees });
@@ -233,16 +250,16 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
                             </label>
                             <div className="custom-select-wrap" style={{ position: "relative" }}>
                                 <button
-                                type="button"
-                                className={`custom-select-trigger ${darkMode ? "dark" : ""} ${priorityOpen ? "open" : ""}`}
-                                onClick={() => setPriorityOpen(!priorityOpen)}
+                                    type="button"
+                                    className={`custom-select-trigger ${darkMode ? "dark" : ""} ${openDropdown === "priority" ? "open" : ""}`}
+                                    onClick={() => setOpenDropdown(openDropdown === "priority" ? null : "priority")}
                                 >
                                     <span className="custom-select-dot" style={{ background: selectedPriority.color }} />
                                     <span className="custom-select-label">{selectedPriority.label}</span>
-                                    <i className={`bi bi-chevron-down custom-select-arrow ${priorityOpen ? "rotated" : ""}`} />
+                                    <i className={`bi bi-chevron-down custom-select-arrow ${openDropdown === "priority" ? "rotated" : ""}`} />
                                 </button>
 
-                                {priorityOpen && (
+                                {openDropdown === "priority" && (
                                     <div className={`custom-select-dropdown ${darkMode ? "dark" : ""}`}>
                                         {PRIORITIES.map((p) => (
                                             <div
@@ -250,9 +267,9 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
                                                 className={`custom-select-option ${priority === p.value ? "active" : ""} ${darkMode ? "dark" : ""}`}
                                                 style={{ "--opt-color": p.color, "--opt-bg": p.bg }}
                                                 onClick={() => {
-                                                setPriority(p.value);
-                                                setPriorityOpen(false);
-                                                onUpdate(task.id, { priority: p.value });
+                                                    setPriority(p.value);
+                                                    setOpenDropdown(null);
+                                                    onUpdate(task.id, { priority: p.value });
                                                 }}
                                             >
                                                 <span className="custom-select-dot" style={{ background: p.color }} />
@@ -278,6 +295,55 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
                             />
                             {isOverdue() && <span className="due-warning overdue-text"><i className="bi bi-exclamation-circle"></i> Overdue!</span>}
                             {isDueSoon() && !isOverdue() && <span className="due-warning soon-text"><i className="bi bi-clock"></i> Due soon!</span>}
+                        </div>
+
+                        {/* Recurring */}
+                        <div className="task-section">
+                            <label className="task-section-label">
+                                <i className="bi bi-arrow-repeat"></i> Recurring
+                            </label>
+                            <div className="custom-select-wrap" style={{ position: "relative" }}>
+                                <button
+                                    type="button"
+                                    className={`custom-select-trigger ${darkMode ? "dark" : ""} ${openDropdown === "recurring" ? "open" : ""}`}
+                                    onClick={() => setOpenDropdown(openDropdown === "recurring" ? null : "recurring")}
+                                >
+                                    <i className={`bi ${RECURRINGS.find(r => r.value === (task.recurring || "none"))?.icon}`}
+                                        style={{ fontSize: "0.85rem", color: "#6366f1" }} />
+                                    <span className="custom-select-label">
+                                        {RECURRINGS.find(r => r.value === (task.recurring || "none"))?.label}
+                                    </span>
+                                    <i className={`bi bi-chevron-down custom-select-arrow ${openDropdown === "recurring" ? "rotated" : ""}`} />
+                                </button>
+
+                                {openDropdown === "recurring" && (
+                                    <div className={`custom-select-dropdown dropup ${darkMode ? "dark" : ""}`}>
+                                        {RECURRINGS.map((r) => (
+                                            <div
+                                                key={r.value}
+                                                className={`custom-select-option ${(task.recurring || "none") === r.value ? "active" : ""} ${darkMode ? "dark" : ""}`}
+                                                onClick={() => {
+                                                    onUpdate(task.id, { recurring: r.value === "none" ? null : r.value });
+                                                    setOpenDropdown(null);
+                                                }}
+                                            >
+                                                <i className={`bi ${r.icon}`} style={{ fontSize: "0.85rem", color: "#6366f1" }} />
+                                                <span>{r.label}</span>
+                                                {(task.recurring || "none") === r.value && (
+                                                    <i className="bi bi-check2 ms-auto" style={{ color: "#6366f1" }} />
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {task.recurring && task.recurring !== "none" && (
+                                <span style={{ fontSize: "0.75rem", color: "#6366f1", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                                    <i className="bi bi-info-circle"></i>
+                                    Task akan otomatis dibuat ulang setelah selesai
+                                </span>
+                            )}
                         </div>
 
                         {/* Assignees */}
@@ -310,6 +376,12 @@ export default function TaskDetailModal({ task, columns, members, onUpdate, onDe
 
                         {/* Delete */}
                         <div className="task-section" style={{ marginTop: "auto" }}>
+                            <button
+                            className="btn-archive-task"
+                            onClick={() => { onArchive(task.id); onClose(); }}
+                            >
+                            <i className="bi bi-archive"></i> Arsipkan Task
+                            </button>
                             <button
                                 className="btn-delete-task"
                                 onClick={() => { onDelete(task.id); onClose(); }}

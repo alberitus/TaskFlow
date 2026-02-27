@@ -80,12 +80,16 @@ export function useTasks(user, workspaceId = null) {
     
     const moveTask = async (taskId, newColumnId) => {
         const task = tasks.find((t) => t.id === taskId);
+        const updates = {
+            columnId: newColumnId,
+            ...(newColumnId === "done" ? { doneAt: Date.now() } : {}),
+        };
         const ref = getTaskRef();
-        if (ref) await setDoc(doc(ref, taskId), { columnId: newColumnId }, { merge: true });
-        else setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, columnId: newColumnId } : t));
+        if (ref) await setDoc(doc(ref, taskId), updates, { merge: true });
+        else setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, ...updates } : t));
         logActivity?.("memindahkan task", task?.text || "");
     };
-
+    
     const reorderTasks = (activeId, overId) => {
         setTasks((prev) => {
             const oldIndex = prev.findIndex((t) => t.id === activeId);
@@ -145,10 +149,32 @@ export function useTasks(user, workspaceId = null) {
         });
     };
 
+    const renameColumn = async (columnId, newTitle) => {
+        const ref = getColRef();
+        if (ref) await setDoc(doc(ref, columnId), { title: newTitle }, { merge: true });
+        else setColumns((prev) => prev.map((c) => c.id === columnId ? { ...c, title: newTitle } : c));
+        logActivity?.("mengubah nama board", newTitle);
+    };
+
+    const archiveTask = async (taskId) => {
+        const task = tasks.find((t) => t.id === taskId);
+        const ref = getTaskRef();
+        if (ref) await setDoc(doc(ref, taskId), { archived: true }, { merge: true });
+        else setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, archived: true } : t));
+        logActivity?.("mengarsipkan task", task?.text || "");
+    };
+
+    const unarchiveTask = async (taskId) => {
+        const ref = getTaskRef();
+        if (ref) await setDoc(doc(ref, taskId), { archived: false }, { merge: true });
+        else setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, archived: false } : t));
+    };
+
     return {
         tasks, ready,
         columns: [...columns].sort((a, b) => a.order - b.order),
         addTask, updateTask, deleteTask, moveTask,
         reorderTasks, addColumn, deleteColumn, reorderColumns,
+        renameColumn, archiveTask, unarchiveTask,
     };
 }

@@ -16,6 +16,15 @@ Aplikasi **Kanban Board** modern dengan fitur drag & drop, dark mode, autentikas
 - **Priority** — High, Medium, Low dengan badge warna
 - **Hapus task** dari dalam modal
 
+- **Archive task** yang sudah done
+- **Filter task** by priority / assignee
+- **Search task**
+- **Sort task** (by priority, by date)
+- **Recurring task** (berulang tiap minggu/bulan)
+- **Deadline tracking** dengan visual progress bar
+- **Comment/diskusi per task**
+- **Mention anggota** menggunakan @nama
+
 ### 🗂️ Board Management
 - **Drag & Drop** — task dan board bisa dipindah bebas
 - **Tambah board** baru dengan nama dan warna custom
@@ -23,6 +32,8 @@ Aplikasi **Kanban Board** modern dengan fitur drag & drop, dark mode, autentikas
 - **Reorder board** via drag handle
 - **Batasan urutan** — To Do tidak bisa melewati In Progress, In Progress tidak bisa melewati Done
 - **Custom warna** — pilih dari 8 preset atau color picker bebas
+- **Board scroll horizontal** jika kolom banyak
+- **Drag task langsung ke kolom lain dengan snap**
 
 ### 👥 Kolaborasi
 - **Login Google** — data tersimpan otomatis di Firebase
@@ -37,44 +48,19 @@ Aplikasi **Kanban Board** modern dengan fitur drag & drop, dark mode, autentikas
 - **Mention anggota** — gunakan @nama di kolom komentar
 - **Daftar workspace** — lihat, switch, dan kelola semua workspace yang diikuti
 
+### 📊 Data & Produktivitas
+- **Statistik progress** (task done, in progress, dll)
+- **Export board** PDF atau CSV
+
 ### 🎨 UI/UX
 - **Dark Mode** — toggle light/dark kapan saja
 - **Mode Tamu** — bisa dipakai tanpa login (data tidak tersimpan)
 - **Custom dropdown** priority bergaya Select2
 - **Avatar inisial** dari nama akun Google
 - **Responsive** — support mobile
-
----
-
-## 🛣️ Roadmap (Planned)
-
-Fitur-fitur berikut sedang direncanakan untuk pengembangan ke depan:
-
-### 🗂️ Board Management
-| Fitur | Status |
-|-------|--------|
-| Rename kolom | 🔜 Planned |
-| Archive task yang sudah done | 🔜 Planned |
-| Filter task by priority / assignee | 🔜 Planned |
-| Search task | 🔜 Planned |
-| Sort task (by priority, by date) | 🔜 Planned |
-
-### 🎨 UI/UX
-| Fitur | Status |
-|-------|--------|
-| Animasi transisi lebih smooth | 🔜 Planned |
-| Board scroll horizontal kalau kolom banyak | 🔜 Planned |
-| Keyboard shortcut (N untuk new task, dll) | 🔜 Planned |
-| Responsive mobile yang lebih baik | 🔜 Planned |
-| Drag task langsung ke kolom lain dengan snap | 🔜 Planned |
-
-### 📊 Data & Produktivitas
-| Fitur | Status |
-|-------|--------|
-| Statistik progress (task done, in progress, dll) | 🔜 Planned |
-| Export board ke PDF atau CSV | 🔜 Planned |
-| Deadline tracking dengan visual progress bar | 🔜 Planned |
-| Recurring task (berulang tiap minggu/bulan) | 🔜 Planned |
+- **Responsive mobile yang lebih baik**
+- **Animasi transisi lebih smooth**
+- **Keyboard shortcu**
 
 ---
 
@@ -242,4 +228,4 @@ npm run preview  # Preview hasil build
 
 ## 📄 Lisensi
 
-Bebas digunakan dan dimodifikasi.
+MIT License — bebas digunakan dan dimodifikasi.

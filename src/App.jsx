@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Board from "./components/Board";
 import WorkspacePanel from "./components/WorkspacePanel";
 import NotificationToast from "./components/NotificationToast";
+import ShortcutHint from "./components/ShortcutHint";
 import { useTasks } from "./hooks/useTasks";
 import { useAuth } from "./hooks/useAuth";
 import { useWorkspace } from "./hooks/useWorkspace";
 import { usePresence } from "./hooks/usePresence";
 import { useActivity } from "./hooks/useActivity";
 import { useNotifications } from "./hooks/useNotifications";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import "./App.css";
 
 export default function App() {
@@ -17,15 +19,32 @@ export default function App() {
   const [workspaceMembers, setWorkspaceMembers] = useState({});
 
   const { user, loading, login, logout } = useAuth();
-  const { workspace, myWorkspaces, loading: wsLoading, error: wsError, createWorkspace, joinWorkspace, leaveWorkspace, switchWorkspace } = useWorkspace(user);
+  const { workspace, myWorkspaces, loading: wsLoading, error: wsError,
+    createWorkspace, joinWorkspace, leaveWorkspace, switchWorkspace,
+    deleteWorkspace, bulkDeleteWorkspace
+  } = useWorkspace(user);
   const { onlineMembers } = usePresence(user, workspace?.id);
   const { activities, logActivity } = useActivity(user, workspace?.id);
   const { notifications, dismiss } = useNotifications(activities, user?.uid);
+
+  const searchInputRef = useRef(null);
+
+  useKeyboardShortcuts({
+    onToggleDark: () => setDarkMode((d) => !d),
+    onSearch: () => {
+      const input = document.querySelector(".toolbar-search-input");
+      if (input) input.focus();
+    },
+    onToggleArchive: () => {
+      window.dispatchEvent(new CustomEvent("toggle-archive"));
+    },
+  });
 
   const {
     tasks, columns, ready,
     addTask, updateTask, deleteTask, moveTask,
     reorderTasks, addColumn, deleteColumn, reorderColumns,
+    renameColumn, archiveTask, unarchiveTask,
   } = useTasks(user, workspace?.id, logActivity);
 
   useEffect(() => {
@@ -114,27 +133,32 @@ export default function App() {
           darkMode={darkMode}
           activities={activities}
           onlineMembers={onlineMembers}
+          onDelete={deleteWorkspace}
+          onBulkDelete={bulkDeleteWorkspace}
         />
       )}
 
       {/* MAIN BOARD */}
       <main className="app-main">
-        <Board
-          tasks={tasks}
-          columns={columns}
-          onAdd={addTask}
-          onUpdate={updateTask}
-          onDelete={deleteTask}
-          onMove={moveTask}
-          onReorder={reorderTasks}
-          onAddColumn={addColumn}
-          onDeleteColumn={deleteColumn}
-          onReorderColumns={reorderColumns}
-          members={workspace ? workspaceMembers : {}}
-          darkMode={darkMode}
-          workspaceId={workspace?.id}
-          user={user}
-        />
+      <Board
+        tasks={tasks}
+        columns={columns}
+        onAdd={addTask}
+        onUpdate={updateTask}
+        onDelete={deleteTask}
+        onMove={moveTask}
+        onReorder={reorderTasks}
+        onAddColumn={addColumn}
+        onDeleteColumn={deleteColumn}
+        onReorderColumns={reorderColumns}
+        onRenameColumn={renameColumn}
+        onArchive={archiveTask}
+        onUnarchive={unarchiveTask}
+        members={workspace ? workspaceMembers : {}}
+        darkMode={darkMode}
+        workspaceId={workspace?.id}
+        user={user}
+      />
       </main>
 
       {/* NOTIFICATION TOAST */}
@@ -157,6 +181,7 @@ export default function App() {
         </div>
       )}
 
+      <ShortcutHint darkMode={darkMode} />
     </div>
   );
 }

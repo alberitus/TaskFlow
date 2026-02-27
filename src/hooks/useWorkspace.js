@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import {
-    doc, setDoc, getDoc, updateDoc, onSnapshot, collection, query, where, getDocs
+    doc, setDoc, getDoc, updateDoc, onSnapshot, collection, query, where, getDocs, deleteDoc
 } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -61,8 +61,22 @@ export function useWorkspace(user) {
         setLoading(false);
     };
 
+    const deleteWorkspace = async (wsId) => {
+        if (!user) return;
+        const wsRef = doc(db, "workspaces", wsId);
+        const snap = await getDoc(wsRef);
+        if (!snap.exists()) return;
+        if (snap.data().ownerId !== user.uid) return;
+        await deleteDoc(wsRef);
+        if (workspace?.id === wsId) setWorkspace(null);
+    };
+
+    const bulkDeleteWorkspace = async (wsIds) => {
+        await Promise.all(wsIds.map((id) => deleteWorkspace(id)));
+    };
+
     const switchWorkspace = (ws) => setWorkspace(ws);
     const leaveWorkspace = () => setWorkspace(null);
 
-    return { workspace, myWorkspaces, loading, error, createWorkspace, joinWorkspace, leaveWorkspace, switchWorkspace };
+    return { workspace, myWorkspaces, loading, error, createWorkspace, joinWorkspace, leaveWorkspace, switchWorkspace, deleteWorkspace, bulkDeleteWorkspace };
 }

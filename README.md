@@ -15,7 +15,6 @@ Aplikasi **Kanban Board** modern dengan fitur drag & drop, dark mode, autentikas
 - **Assign task** ke member workspace
 - **Priority** — High, Medium, Low dengan badge warna
 - **Hapus task** dari dalam modal
-
 - **Archive task** yang sudah done
 - **Filter task** by priority / assignee
 - **Search task**
